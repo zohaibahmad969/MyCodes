@@ -1,0 +1,106 @@
+// Assuming the form submission triggers this function
+function check_password_match() {
+    global $wpdb;
+    $order_user_id = $_POST['order_user_id']; // Get the user ID from the form
+    $order_user_product_password = $_POST['order_user_product_password']; // Get the password from the form
+    $product_url = $_POST['product_url'];
+
+    // Prepare and execute a query to check for a match in the database
+    $result = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT * FROM wp_orders_user_passwords 
+            WHERE order_user_id = %d AND order_user_product_password = %s",
+            $order_user_id,
+            $order_user_product_password
+        )
+    );
+
+    if ($result) {
+        $order_id = $result->order_id;
+        
+        $order = wc_get_order($order_id);
+
+        if ($order) {
+
+            // Get items from the order
+            $items = $order->get_items();
+
+            // Loop through items to get product IDs
+            foreach ($items as $item) {
+                $product_id = $item->get_product_id();
+            }
+
+            // Output the product IDs
+            $custom_field_value = get_post_meta($product_id, 'question_page_form_link', true);
+        }
+        
+        if($custom_field_value === $product_url){
+            // Match found, hide the popup
+            echo json_encode(array('success' => true));
+        }else{   
+            // No match found, display a message
+            echo json_encode(array('success' => false, 'message' => 'User found but product url dismatch'));
+        }
+        
+        
+    } else {
+        // No match found, display a message
+        echo json_encode(array('success' => false, 'message' => 'User not found'));
+    }
+
+    wp_die(); // Always include this at the end to end the script properly
+}
+add_action('wp_ajax_check_password_match', 'check_password_match');
+add_action('wp_ajax_nopriv_check_password_match', 'check_password_match');
+
+
+
+
+
+
+
+add_action('wp_footer', 'add_custom_sscripts_inline');
+function add_custom_sscripts_inline() {
+    ?>
+    
+    <script>
+        // Assuming jQuery is being used
+            jQuery(document).ready(function($) {
+                
+                window.setTimeout(function(){
+                    $('.jf-subimit-bttn-qa .elementor-field-type-submit .elementor-button').on('click', function(e) {
+                        e.preventDefault();
+                        alert("yes");
+                        var order_user_id = $('#form-field-popuporderid').val(); // Get the user ID from the form field
+                        var order_user_product_password = $('#form-field-popuporderpasword').val(); // Get the password from the form field
+                
+                        // AJAX call to send data to PHP for checking
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>', // WordPress AJAX handler URL
+                            type: 'POST',
+                            data: {
+                                action: 'check_password_match',
+                                order_user_id: order_user_id,
+                                order_user_product_password: order_user_product_password,
+                                product_url: window.location.href
+                            },
+                            success: function(response) {
+                                var data = JSON.parse(response);
+                                if (data.success) {
+                                    // Match found, hide the popup
+                                    $('#elementor-popup-modal-1174').hide();
+                                } else {
+                                    // No match found, display a message
+                                    alert(data.message); // You can replace this with your preferred way of displaying the message
+                                }
+                            },
+                            error: function(error) {
+                                console.log(error);
+                            }
+                        });
+                    });
+                }, 1000)
+            });
+    </script>
+    <?php
+}
