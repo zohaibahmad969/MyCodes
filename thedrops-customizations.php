@@ -7343,7 +7343,7 @@ color: #132E5D;
     }
     elseif (tdc_url_has('/checkout')) {
         ?>
-        <style>
+       <style>
             body.woocommerce-checkout {
                 background-color: #f7ece3;
             }
