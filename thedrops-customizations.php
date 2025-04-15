@@ -550,3 +550,32 @@
                 box-shadow: none !important;
             }
         </style>
+        <?php
+    } elseif (is_front_page()) {
+        ?>
+        <style>
+            .heading-people span {
+                font-family: "DynaPuff";
+                font-weight: 700;
+                text-transform: uppercase;
+                text-shadow: 1.5px 2.5px #132e5d;
+                -webkit-text-stroke: 2px #132e5d;
+                position: relative;
+            }
+            .heading-people span::before {
+                color: inherit;
+                content: attr(data-text);
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 1;
+                width: 100%;
+                height: 100%;
+                padding: inherit;
+                text-shadow: none;
+                -webkit-text-stroke: 0;
+            }
+            .splide__track {
+                overflow: visible !important;
+            }
+        </style>
